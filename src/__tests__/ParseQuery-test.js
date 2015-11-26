@@ -15,8 +15,6 @@ jest.dontMock('../ParsePromise');
 jest.dontMock('../ParseQuery');
 jest.dontMock('./test_helpers/asyncHelper');
 
-jest.dontMock('../ReduxCacheHelper');
-
 var mockObject = function(className) {
   this.className = className;
   this.attributes = {};

@@ -12,8 +12,6 @@ jest.dontMock('../ParseACL');
 jest.dontMock('../ParseFile');
 jest.dontMock('../ParseGeoPoint');
 
-jest.dontMock('../ReduxCacheHelper');
-
 var mockObject = function(className) {
   this.className = className;
 };

@@ -13,8 +13,6 @@ jest.dontMock('../decode');
 jest.dontMock('../encode');
 jest.dontMock('../ParsePromise');
 
-jest.dontMock('../ReduxCacheHelper');
-
 var Cloud = require('../Cloud');
 var CoreManager = require('../CoreManager');
 var ParsePromise = require('../ParsePromise');

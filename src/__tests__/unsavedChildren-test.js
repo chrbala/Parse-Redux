@@ -10,8 +10,6 @@
 jest.dontMock('../ParseFile');
 jest.dontMock('../unsavedChildren');
 
-jest.dontMock('../ReduxCacheHelper');
-
 function mockObject({ className, localId, id, attributes, dirty }) {
   this.className = className;
   this.localId = localId;
