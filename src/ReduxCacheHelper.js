@@ -28,7 +28,7 @@ export default function(options) {
 		var state = getItemState(State, {name, data});
 
 		if (state.pending)
-			return getItemState(ExecutedFunctions, {name, data});
+			return getItemState(Executed, {name, data});
 
 		if (state.cache)
 			return Parse.Promise.as(state.cache);
