@@ -61,3 +61,6 @@ var _functionActions = [
 export const FunctionActions = generateActions(_functionActions, 'Parse/Cloud');
 export const QueryActions = generateActions(_functionActions, 'Parse/Query');
 
+export const UserActions = generateActions([
+	'set'
+], 'Parse/User');

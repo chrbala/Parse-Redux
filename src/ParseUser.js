@@ -18,6 +18,9 @@ import ParsePromise from './ParsePromise';
 import ParseSession from './ParseSession';
 import Storage from './Storage';
 
+import * as Store from './ReduxStore';
+import { UserActions as Actions } from './ReduxActionCreators';
+
 import type { AttributeMap } from './ObjectState';
 import type { RequestOptions, FullOptions } from './RESTController';
 
@@ -26,7 +29,20 @@ export type AuthData = ?{ [key: string]: mixed };
 var CURRENT_USER_KEY = 'currentUser';
 var canUseCurrentUser = !CoreManager.get('IS_NODE');
 var currentUserCacheMatchesDisk = false;
-var currentUserCache = null;
+
+var currentUserCache = (function() {
+	var _currentUserCache = null;
+
+	return {
+		get() {
+			return _currentUserCache;
+		},
+		set(user) {
+			Store.dispatch(Actions.set(user));
+			_currentUserCache = user;
+		}
+	}
+})();
 
 var authProviders = {};
 
@@ -707,12 +723,12 @@ export default class ParseUser extends ParseObject {
   }
 
   static _clearCache() {
-    currentUserCache = null;
+    currentUserCache.set(null);
     currentUserCacheMatchesDisk = false;
   }
 
   static _setCurrentUserCache(user) {
-    currentUserCache = user;
+    currentUserCache.set(user);
   }
 }
 
@@ -731,15 +747,16 @@ var DefaultController = {
   },
 
   setCurrentUser(user) {
-    currentUserCache = user;
+    currentUserCache.set(user);
     user._cleanupAuthData();
     user._synchronizeAllAuthData();
     return DefaultController.updateUserOnDisk(user);
   },
 
   currentUser(): ?ParseUser {
-    if (currentUserCache) {
-      return currentUserCache;
+  	var cache = currentUserCache.get();
+    if (cache) {
+      return cache;
     }
     if (currentUserCacheMatchesDisk) {
       return null;
@@ -754,7 +771,7 @@ var DefaultController = {
     var userData = Storage.getItem(path);
     currentUserCacheMatchesDisk = true;
     if (!userData) {
-      currentUserCache = null;
+      currentUserCache.set(null);
       return null;
     }
     userData = JSON.parse(userData);
@@ -772,14 +789,15 @@ var DefaultController = {
       delete userData._sessionToken;
     }
     var current = ParseUser.fromJSON(userData);
-    currentUserCache = current;
+    currentUserCache.set(current);
     current._synchronizeAllAuthData();
     return current;
   },
 
   currentUserAsync(): ParsePromise {
-    if (currentUserCache) {
-      return ParsePromise.as(currentUserCache)
+  	var cache = currentUserCache.get();
+    if (cache) {
+      return ParsePromise.as(cache)
     }
     if (currentUserCacheMatchesDisk) {
       return ParsePromise.as(null);
@@ -790,7 +808,7 @@ var DefaultController = {
     ).then((userData) => {
       currentUserCacheMatchesDisk = true;
       if (!userData) {
-        currentUserCache = null;
+        currentUserCache.set(null);
         return ParsePromise.as(null);
       }
       userData = JSON.parse(userData);
@@ -808,7 +826,7 @@ var DefaultController = {
         delete userData._sessionToken;
       }
       var current = ParseUser.fromJSON(userData);
-      currentUserCache = current;
+      currentUserCache.set(current);
       current._synchronizeAllAuthData();
       return ParsePromise.as(current);
     });
@@ -903,7 +921,7 @@ var DefaultController = {
         currentUser._finishFetch({ sessionToken: undefined });
       }
       currentUserCacheMatchesDisk = true;
-      currentUserCache = null;
+      currentUserCache.set(null);
 
       return promise;
     });

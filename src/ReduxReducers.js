@@ -216,13 +216,22 @@ const Cloud = {
 	}
 }
 
-function createReducers(reducers) {
-	var out = {};
+const User = {
+	SET(state, payload) {
+		state = {...state};
+		state.current = payload && {id: payload.id};
 
-	for (let name in reducers) {
-		let reducer = reducers[name];
+		return state;
+	}
+}
 
-		out[name] = function(state = {}, action) {
+function createReducers(_reducers) {
+	var reducers = {};
+
+	for (let name in _reducers) {
+		let reducer = _reducers[name];
+
+		reducers[name] = function(state = {}, action) {
 			var [namespace, handlerName, type] = action.type.split('/');
 
 			if (namespace == 'Parse' && handlerName == name && reducer[type])
@@ -231,7 +240,13 @@ function createReducers(reducers) {
 		}
 	}
 
-	return combineReducers(out);
+	return function(state = {}, action) {
+		// clear cache after user logs out
+		if (action.type == 'Parse/User/SET' && (state.User && state.User.current) && action.payload === null)
+			return combineReducers(reducers)({}, action);
+		
+		return combineReducers(reducers)(state, action);
+	}
 }
 
 const Query = Cloud;
@@ -239,5 +254,6 @@ const Query = Cloud;
 export default createReducers({
 	'Object': Objects,
 	Cloud,
-	Query
+	Query,
+	User
 });
