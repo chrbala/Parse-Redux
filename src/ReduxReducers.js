@@ -225,23 +225,32 @@ const User = {
 	}
 }
 
-function createReducers(_reducers) {
+export function generateReducers(_reducers, _namespace) {
 	var reducers = {};
 
 	for (let name in _reducers) {
 		let reducer = _reducers[name];
 
 		reducers[name] = function(state = {}, action) {
-			var [namespace, handlerName, type] = action.type.split('/');
+			var path = action.type.split('/');
+			var type = path.pop();
+			var handlerName = path.pop();
+			var namespace = path.pop();
 
-			if (namespace == 'Parse' && handlerName == name && reducer[type])
+			if (namespace == _namespace && handlerName == name && reducer[type])
 				return reducer[type](state, action.payload);
 			return state;
 		}
 	}
+	
+	return reducers;
+}
+
+function generateParseReducers(_reducers) {
+	var reducers = generateReducers(_reducers, 'Parse');
 
 	return function(state = {}, action) {
-		// clear cache after user logs out
+		// clear state if user logs out
 		if (action.type == 'Parse/User/SET' && (state.User && state.User.current) && action.payload === null)
 			return combineReducers(reducers)({}, action);
 		
@@ -251,7 +260,7 @@ function createReducers(_reducers) {
 
 const Query = Cloud;
 
-export default createReducers({
+export default generateParseReducers({
 	'Object': Objects,
 	Cloud,
 	Query,

@@ -15,7 +15,8 @@ import * as ParseOp from './ParseOp';
 import RESTController from './RESTController';
 
 import * as Store from './ReduxStore';
-import parseReducer from './ReduxReducers'
+import { default as parseReducer, generateReducers} from './ReduxReducers'
+import { generateActions } from './ReduxActionCreators'
 
 /**
  * Contains all Parse API classes and functions.
@@ -137,6 +138,10 @@ Parse.setStore = function() {
 }
 Parse.getReducer = function() {
 	return parseReducer;
+}
+Parse.ReduxHelpers = {
+	generateActions,
+	generateReducers
 }
 
 CoreManager.setInstallationController(InstallationController);
