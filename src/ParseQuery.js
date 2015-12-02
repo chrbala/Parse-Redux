@@ -302,23 +302,73 @@ export default class ParseQuery {
 	  	return cacheHelper.cache(_find, this.className, this);
 	  }).bind(this);
 
-	  _find.append = (function(grouping, options) {
+	  function cloneQuery(oldQuery) {
+	  	var query = new ParseQuery(oldQuery.className);
+	  	for (var prop in oldQuery)
+	  		if (oldQuery.hasOwnProperty(prop))
+	  			query[prop] = JSON.parse(JSON.stringify(oldQuery[prop]));
+	  	return query;
+	  }
+
+	  function setDirection(query, cache, append) {
+	  	var direction = query._where.createdAt;
+	  	var impliedDescending = (!!direction && !!direction.$lt);
+	  	var start;
+	  	if (direction)
+	  	{
+	  		start = direction.$lt || direction.$gt;
+	  		delete query._where.createdAt;
+	  	}
+  		
+  		var ascending;
+	  	if (cache && cache.length >= 2)
+	  		ascending = cache[0].get('createdAt') < cache[1].get('createdAt');
+	  	else
+	  	{
+	  		var actualDescending = (!!query._order && query._order.length == 1 && query._order[0] == '-createdAt')
+  			var descending = impliedDescending || actualDescending;
+	  		ascending = !descending;
+	  	}
+
+	  	if (!append)
+  			ascending = !ascending
+	  	
+	  	query[ascending ? 'ascending' : 'descending']('createdAt');
+
+	  	var last;
+	  	if (cache && cache.length)
+	  		last = (append ? cache[cache.length - 1] : cache[0]).get('createdAt');
+	  	else
+	  		last = start;
+
+	  	if (last)
+	  		query[ascending ? 'greaterThan' : 'lessThan']('createdAt', last);
+	  }
+
+	  function manageCache(grouping, options, operation) {
+	  	var state = Store.getState().Parse.Query;
 	  	var name = this.className;
 	  	var data = this;
+	  	var cache = getItemState(state, {name, data, grouping, options}).cache;
+	  	var query = cloneQuery(this);
+	  	var append = operation == 'append';
+	  	
+	  	setDirection(query, cache, append);
 
-	  	return cacheHelper.append(_find, {name, data, grouping, options});
+	  	// console.log(JSON.stringify(query, null, 2))
+	  	return cacheHelper[operation](query.find, {name, data, grouping, options});
+	  }
+
+	  _find.append = (function(grouping, options) {
+	  	return manageCache.call(this, grouping, options, 'append');
 	  }).bind(this);
 
 	  _find.prepend = (function(grouping, options) {
-	  	var name = this.className;
-	  	var data = this;
-
-	  	return cacheHelper.prepend(_find, {name, data, grouping, options});
+	  	return manageCache.call(this, grouping, options, 'prepend');
 	  }).bind(this);
 
 	  return _find;
   }
-  
 
   /**
    * Counts the number of objects that match this query.
