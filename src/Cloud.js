@@ -69,12 +69,18 @@ export var run = function(
   );
 }
 
-run.cache = function() {
-	return cacheHelper.cache(run, ...arguments);
+run.refresh = function(name, data, grouping, options) {
+	var cb = run.bind(null, name, data, options);
+	return cacheHelper.refresh(cb, {name, data, grouping});
 }
 
-run.refresh = function() {
-	return cacheHelper.refresh(run, ...arguments);
+run.init = function(name, data, grouping, options) {
+	var cb = run.bind(null, name, data, options);
+	return cacheHelper.init(cb, {name, data, grouping});
+}
+
+run.get = function(name, data, grouping) {
+	return cacheHelper.get({name, data, grouping});
 }
 
 run.append = function(
@@ -83,7 +89,8 @@ run.append = function(
   grouping: string,
   options: { [key: string]: mixed }
 ) {
-	return cacheHelper.append(run, {name, data, grouping, options});
+	var cb = run.bind(null, name, data, options);
+	return cacheHelper.append(cb, {name, data, grouping});
 }
 
 run.prepend = function(
@@ -92,11 +99,12 @@ run.prepend = function(
   grouping: string,
   options: { [key: string]: mixed }
 ) {
-	return cacheHelper.prepend(run, {name, data, grouping, options});
+	var cb = run.bind(null, name, data, options);
+	return cacheHelper.prepend(cb, {name, data, grouping});
 }
 
-run.isPending = function() {
-	return cacheHelper.isPending(run, ...arguments);
+run.isPending = function(name, data, grouping) {
+	return cacheHelper.isPending({name, data, grouping});
 }
 
 var DefaultController = {

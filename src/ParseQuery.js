@@ -298,8 +298,8 @@ export default class ParseQuery {
 	  	return cacheHelper.refresh(_find, this.className, this);
 	  }).bind(this);
 
-	  _find.cache = (function() {
-	  	return cacheHelper.cache(_find, this.className, this);
+	  _find.init = (function() {
+	  	return cacheHelper.init(_find, this.className, this);
 	  }).bind(this);
 
 	  function cloneQuery(oldQuery) {
@@ -345,26 +345,55 @@ export default class ParseQuery {
 	  		query[ascending ? 'greaterThan' : 'lessThan']('createdAt', last);
 	  }
 
-	  function manageCache(grouping, options, operation) {
+	  var _manageCache = (function _manageCache(options, operation) {
 	  	var state = Store.getState().Parse.Query;
-	  	var name = this.className;
-	  	var data = this;
-	  	var cache = getItemState(state, {name, data, grouping, options}).cache;
+	  	var cache = getItemState(state, options).cache;
 	  	var query = cloneQuery(this);
 	  	var append = operation == 'append';
 	  	
 	  	setDirection(query, cache, append);
 
-	  	// console.log(JSON.stringify(query, null, 2))
-	  	return cacheHelper[operation](query.find, {name, data, grouping, options});
-	  }
-
-	  _find.append = (function(grouping, options) {
-	  	return manageCache.call(this, grouping, options, 'append');
+	  	var cb = query.find.bind(query, options);
+	  	return cacheHelper[operation](cb, options);
 	  }).bind(this);
 
-	  _find.prepend = (function(grouping, options) {
-	  	return manageCache.call(this, grouping, options, 'prepend');
+	  _find.append = (function append(grouping) {
+	  	var name = this.className;
+	  	var data = this;
+	  	var options = {name, data, grouping};
+
+	  	return _manageCache(options, 'append');
+	  }).bind(this);
+
+	  _find.prepend = (function prepend(grouping) {
+	  	var name = this.className;
+	  	var data = this;
+	  	var options = {name, data, grouping};
+
+	  	return _manageCache(options, 'prepend');
+	  }).bind(this);
+
+	  var _init = (function _init(grouping, operation) {
+	  	var name = this.className;
+	  	var data = this;
+	  	var options = {name, data, grouping};
+
+	  	return _manageCache(options, operation);
+	  }).bind(this);
+
+	  _find.append.init = (function appendInit(grouping) {
+	  	return _init(grouping, 'append');
+	  }).bind(this);
+
+	  _find.prepend.init = (function prependInit(grouping) {
+	  	return _init(grouping, 'append');
+	  }).bind(this);
+
+	  _find.get = (function findGet(grouping) {
+	  	var name = this.className;
+	  	var data = this;
+
+	  	return cacheHelper.get({name, data, grouping});
 	  }).bind(this);
 
 	  return _find;

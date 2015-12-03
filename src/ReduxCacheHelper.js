@@ -1,111 +1,116 @@
 import * as Store from './ReduxStore';
 
-export default function(options) {
-	var Actions = options.Actions;
-	var namespace = options.namespace;
+export default function({Actions, namespace}) {
 	var Executed = {};
 
-	function refresh(cb, name, data, options) {
-		Store.dispatch(Actions.setPending({name, data}));
+	function refresh(cb, options) {
+		Store.dispatch(Actions.setPending(options));
 
-		var done = cb(name, data, options).then(function(result) {
-			Store.dispatch(Actions.saveResult({name, data, result}));
+		var done = cb().then(function(result) {
+			Store.dispatch(Actions.saveResult({...options, result}));
 			
 			return Parse.Promise.as(result);
 		}).fail(function(err) {
-			Store.dispatch(Actions.unsetPending({name, data}));
+			Store.dispatch(Actions.unsetPending(options));
 
 			return Parse.Promise.error(err);
 		});
 
-		Executed = setItemState(Executed, {name, data}, done);
+		Executed = setItemState(Executed, options, done);
 
 		return done;
 	}
 
-	function cache(cb, name, data, options) {
+	function init(cb, options) {
 		var State = Store.getState().Parse[namespace];
-		var state = getItemState(State, {name, data});
+		var { cache, pending } = getItemState(State, options);
 
-		if (state.pending)
-			return getItemState(Executed, {name, data});
+		if (pending)
+			return getItemState(Executed, options);
 
-		if (state.cache)
-			return Parse.Promise.as(state.cache);
+		if (cache)
+			return Parse.Promise.as(cache);
 
 		return refresh(...arguments);
 	}
 
-	function operateOnArray(cb, params, operation) {
-		var {name, data, grouping, options} = params;
+	// returns cached result if it has already been saved
+	// queries if no result exists
+	function get(options) {
+		var State = Store.getState().Parse[namespace];
+		var state = getItemState(State, options);
 
-		Store.dispatch(Actions.setPending({name, data, grouping}));
+		return state.cache;
+	}
 
-		return cb(name, data, options).then(function(result) {
-			Store.dispatch(Actions[operation]({name, data, grouping, result}));
+	function _operateOnArray(cb, options, operation) {
+		Store.dispatch(Actions.setPending(options));
+
+		return cb().then(function(result) {
+			Store.dispatch(Actions[operation]({...options, result}));
 
 			return Parse.Promise.as(result);
 		}).fail(function(err) {
-			Store.dispatch(Actions.unsetPending({name, data, grouping}));
+			Store.dispatch(Actions.unsetPending(options));
 
 			return Parse.Promise.error(err);
 		});
 	}
 
 	function append() {
-		return operateOnArray(...arguments, 'appendResult');
+		return _operateOnArray(...arguments, 'appendResult');
 	}
 
 	function prepend() {
-		return operateOnArray(...arguments, 'prependResult');
+		return _operateOnArray(...arguments, 'prependResult');
 	}
 
-	function isPending(name, data) {
+	function isPending(options) {
 		var State = Store.getState().Parse[namespace];
-		var state = getItemState(State, {name, data});
+		var state = getItemState(State, options);
 
 		return state.pending;
 	}
 
 	return {
 		refresh,
-		cache,
-		operateOnArray,
+		init,
+		get,
 		append,
 		prepend,
 		isPending
 	}
 }
 
-export function getItemState(object, options) {
-	var next = object[options.name];
+export function getItemState(object, {name, data, grouping}) {
+	var next = object[name];
   if (!next)
   	return {};
 
-  if (options.grouping)
-  	next = next[options.grouping];
+  if (grouping)
+  	next = next[grouping];
   else
-  	next = next[JSON.stringify(options.data)];
+  	next = next[JSON.stringify(data)];
 
   return next || {};
 }
 
-export function setItemState(object, options, value) {
+export function setItemState(object, {name, data, grouping}, value) {
 	var object = {...object};
-	var next = object[options.name];
+	var next = object[name];
 
 	if (next)
 		next = {...next};
   else
   	next = {};
 
-  object[options.name] = next;
+  object[name] = next;
 
   var key;
-  if (options.grouping)
-  	key = options.grouping;
+  if (grouping)
+  	key = grouping;
   else
-  	key = JSON.stringify(options.data);
+  	key = JSON.stringify(data);
   	
 	next[key] = value;
 
