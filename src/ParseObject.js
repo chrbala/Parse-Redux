@@ -203,12 +203,7 @@ export default class ParseObject {
   }
 
   _clearPendingOps() {
-    var pending = this._getPendingOps();
-    var latest = pending[pending.length - 1];
-    var keys = Object.keys(latest);
-    keys.forEach((key) => {
-      delete latest[key];
-    });
+    ObjectState.clearPendingOps(this.className, this._getStateIdentifier());
   }
 
   _getDirtyObjectAttributes(): AttributeMap {

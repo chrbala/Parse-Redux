@@ -33,6 +33,7 @@ export const ObjectActions = generateActions([
 	'removeState',
 	'setServerData',
 	'setPendingOp',
+	'clearPendingOps',
 	'pushPendingState',
 	'popPendingState',
 	'mergeFirstPendingState',

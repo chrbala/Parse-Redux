@@ -6,10 +6,7 @@ import { combineReducers } from 'redux';
 import { getItemState, setItemState } from './ReduxCacheHelper';
 
 const Objects = {
-	INITIALIZE_STATE(objectState, payload) {
-		var {className, id, initial} = payload;
-		var initial = payload.initial;
-
+	INITIALIZE_STATE(objectState, {className, id, initial}) {
 	  objectState = {...objectState};
 	  if (!objectState[className]) {
 	    objectState[className] = {};
@@ -29,17 +26,13 @@ const Objects = {
 	  objectState[className][id] = initial;
 	  return objectState;
 	},
-	REMOVE_STATE(objectState, payload) {
-		var {className, id} = payload;
-
+	REMOVE_STATE(objectState, {className, id}) {
 	  objectState = {...objectState};
 	  objectState[className] = {...objectState[className]};
 	  delete objectState[className][id];
 	  return objectState;
 	},
-	SET_SERVER_DATA(objectState, payload) {
-		var {className, id, attributes} = payload;
-
+	SET_SERVER_DATA(objectState, {className, id, attributes}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -55,9 +48,7 @@ const Objects = {
 
 	  return objectState;
 	},
-	SET_PENDING_OP(objectState, payload) {
-		var {className, id, attr, op} = payload;
-
+	SET_PENDING_OP(objectState, {className, id, attr, op}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -72,9 +63,15 @@ const Objects = {
 
 	  return objectState;
 	},
-	PUSH_PENDING_STATE(objectState, payload) {
-		var {className, id} = payload;
+	CLEAR_PENDING_OPS(objectState, {className, id, attr, op}) {
+		objectState = {...objectState};
+		objectState[className] = {...objectState[className]};
+		objectState[className][id] = {...objectState[className][id]};
+		objectState[className][id].pendingOps = [{}];
 
+		return objectState;
+	},
+	PUSH_PENDING_STATE(objectState, {className, id}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -84,9 +81,7 @@ const Objects = {
 
 		return objectState;
 	},
-	POP_PENDING_STATE(objectState, payload) {
-		var {className, id} = payload;
-
+	POP_PENDING_STATE(objectState, {className, id}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -99,9 +94,7 @@ const Objects = {
 
 	  return objectState;
 	},
-	MERGE_FIRST_PENDING_STATE(objectState, payload) {
-		var {className, id} = payload;
-
+	MERGE_FIRST_PENDING_STATE(objectState, {className, id}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -123,9 +116,7 @@ const Objects = {
 
 		return objectState;
 	},
-	COMMIT_SERVER_CHANGES(objectState, payload) {
-		var {className, id, changes} = payload;
-
+	COMMIT_SERVER_CHANGES(objectState, {className, id, changes}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		objectState[className][id] = {...objectState[className][id]};
@@ -151,9 +142,7 @@ const Objects = {
 	_CLEAR_ALL_STATE() {
 		return {};
 	},
-	_SET_EXISTED(objectState, payload) {
-		var {className, id, existed} = payload;
-
+	_SET_EXISTED(objectState, {className, id, existed}) {
 		objectState = {...objectState};
 		objectState[className] = {...objectState[className]};
 		var myObject = objectState[className][id] = {...objectState[className][id]};

@@ -86,6 +86,11 @@ export function setPendingOp(className: string, id: string, attr: string, op: ?O
   Store.dispatch(Actions.setPendingOp({className, id, attr, op}));
 }
 
+export function clearPendingOps(className: string, id: string) {
+  initializeState(className, id);
+  Store.dispatch(Actions.clearPendingOps({className, id}));
+}
+
 export function pushPendingState(className: string, id: string) {
 	initializeState(className, id);
   Store.dispatch(Actions.pushPendingState({className, id}));
