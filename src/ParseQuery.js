@@ -294,12 +294,12 @@ export default class ParseQuery {
 	    })._thenRunCallbacks(options);
 	  }).bind(this);
 
-	  _find.refresh = (function() {
-	  	return cacheHelper.refresh(_find, this.className, this);
+	  _find.refresh = (function refresh(grouping) {
+	  	return cacheHelper.refresh(_find, {name: this.className, data: this, grouping});
 	  }).bind(this);
 
-	  _find.init = (function() {
-	  	return cacheHelper.init(_find, this.className, this);
+	  _find.init = (function init(grouping) {
+	  	return cacheHelper.init(_find, {name: this.className, data: this, grouping});
 	  }).bind(this);
 
 	  function cloneQuery(oldQuery) {
