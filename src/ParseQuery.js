@@ -382,6 +382,15 @@ export default class ParseQuery {
 	  	return cacheHelper.get({name, data, grouping});
 	  }).bind(this);
 
+	  _find.getState = (function getState(grouping) {
+	  	var name = this.className;
+	  	var data = this;
+
+	  	var state = getItemState(Store.getState().Parse.Query, {name, data, grouping});
+			if (Object.keys(state).length)
+				return state;
+	  }).bind(this);
+
 	  return _find;
   }
 

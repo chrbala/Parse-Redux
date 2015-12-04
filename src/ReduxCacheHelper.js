@@ -72,20 +72,12 @@ export default function({Actions, namespace}) {
 		return _operateOnArray(...arguments, 'prependResult');
 	}
 
-	function isPending(options) {
-		var State = Store.getState().Parse[namespace];
-		var state = getItemState(State, options);
-
-		return state.pending;
-	}
-
 	return {
 		refresh,
 		init,
 		get,
 		append,
-		prepend,
-		isPending
+		prepend
 	}
 }
 

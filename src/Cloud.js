@@ -18,7 +18,7 @@ import ParsePromise from './ParsePromise';
 import * as Store from './ReduxStore';
 import { FunctionActions as Actions } from './ReduxActionCreators';
 
-import CacheHelper from './ReduxCacheHelper';
+import CacheHelper, { getItemState } from './ReduxCacheHelper';
 var cacheHelper = new CacheHelper({Actions, namespace: "Cloud"});
 
 /**
@@ -105,8 +105,10 @@ run.prepend = function(
 	return cacheHelper.prepend(cb, {name, data, grouping, limit});
 }
 
-run.isPending = function(name, data, grouping) {
-	return cacheHelper.isPending({name, data, grouping});
+run.getState = function(name, data, grouping) {
+	var state = getItemState(Store.getState().Parse.Cloud, {name, data, grouping});
+	if (Object.keys(state).length)
+		return state;
 }
 
 var DefaultController = {
