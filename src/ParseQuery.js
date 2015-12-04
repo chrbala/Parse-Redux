@@ -295,11 +295,15 @@ export default class ParseQuery {
 	  }).bind(this);
 
 	  _find.refresh = (function refresh(grouping) {
-	  	return cacheHelper.refresh(_find, {name: this.className, data: this, grouping});
+	  	var limit = this._limit != -1 ? this._limit : 100;
+
+	  	return cacheHelper.refresh(_find, {name: this.className, data: this, grouping, limit});
 	  }).bind(this);
 
 	  _find.init = (function init(grouping) {
-	  	return cacheHelper.init(_find, {name: this.className, data: this, grouping});
+	  	var limit = this._limit != -1 ? this._limit : 100;
+
+	  	return cacheHelper.init(_find, {name: this.className, data: this, grouping, limit});
 	  }).bind(this);
 
 	  function cloneQuery(oldQuery) {
@@ -312,7 +316,7 @@ export default class ParseQuery {
 
 	  function setDirection(query, cache, append) {
 	  	var direction = query._where.createdAt;
-	  	var impliedDescending = (!!direction && !!direction.$gt);
+	  	var impliedAscending = (!!direction && !!direction.$gt);
 	  	var start;
 	  	if (direction)
 	  	{
@@ -326,7 +330,7 @@ export default class ParseQuery {
 	  	else
 	  	{
 	  		var actualAscending = (!!query._order && query._order.length == 1 && query._order[0] == 'createdAt')
-  			ascending = impliedDescending || actualAscending;
+  			ascending = impliedAscending || actualAscending;
 	  	}
 
 	  	if (!append)
@@ -349,27 +353,26 @@ export default class ParseQuery {
 	  	var cache = getItemState(state, options).cache;
 	  	var query = cloneQuery(this);
 	  	var append = operation == 'append';
+	  	var limit = this._limit != -1 ? this._limit : 100;
 	  	
 	  	setDirection(query, cache, append);
 
 	  	var cb = query.find.bind(query, options);
-	  	return cacheHelper[operation](cb, options);
+	  	return cacheHelper[operation](cb, {...options, limit});
 	  }).bind(this);
 
 	  _find.append = (function append(grouping) {
 	  	var name = this.className;
 	  	var data = this;
-	  	var options = {name, data, grouping};
 
-	  	return _manageCache(options, 'append');
+	  	return _manageCache({name, data, grouping}, 'append');
 	  }).bind(this);
 
 	  _find.prepend = (function prepend(grouping) {
 	  	var name = this.className;
 	  	var data = this;
-	  	var options = {name, data, grouping};
 
-	  	return _manageCache(options, 'prepend');
+	  	return _manageCache({name, data, grouping}, 'prepend');
 	  }).bind(this);
 
 	  _find.get = (function findGet(grouping) {

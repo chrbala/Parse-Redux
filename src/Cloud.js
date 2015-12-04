@@ -69,14 +69,14 @@ export var run = function(
   );
 }
 
-run.refresh = function(name, data, grouping, options) {
+run.refresh = function(name, data, grouping, limit, options) {
 	var cb = run.bind(null, name, data, options);
-	return cacheHelper.refresh(cb, {name, data, grouping});
+	return cacheHelper.refresh(cb, {name, data, grouping, limit});
 }
 
-run.init = function(name, data, grouping, options) {
+run.init = function(name, data, grouping, limit, options) {
 	var cb = run.bind(null, name, data, options);
-	return cacheHelper.init(cb, {name, data, grouping});
+	return cacheHelper.init(cb, {name, data, grouping, limit});
 }
 
 run.get = function(name, data, grouping) {
@@ -87,20 +87,22 @@ run.append = function(
   name: string,
   data = {}: mixed,
   grouping: string,
+  limit: number,
   options: { [key: string]: mixed }
 ) {
 	var cb = run.bind(null, name, data, options);
-	return cacheHelper.append(cb, {name, data, grouping});
+	return cacheHelper.append(cb, {name, data, grouping, limit});
 }
 
 run.prepend = function(
   name: string,
   data = {}: mixed,
   grouping: string,
+  limit: number,
   options: { [key: string]: mixed }
 ) {
 	var cb = run.bind(null, name, data, options);
-	return cacheHelper.prepend(cb, {name, data, grouping});
+	return cacheHelper.prepend(cb, {name, data, grouping, limit});
 }
 
 run.isPending = function(name, data, grouping) {

@@ -57,7 +57,8 @@ var _functionActions = [
 		payload.operation = 'unshift';
 
 		return {type, payload};
-	}}
+	}},
+	'estimateEndOfResults',
 ];
 
 export const FunctionActions = generateActions(_functionActions, 'Parse/Cloud');

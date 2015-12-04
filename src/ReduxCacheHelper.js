@@ -6,8 +6,12 @@ export default function({Actions, namespace}) {
 	function refresh(cb, options) {
 		Store.dispatch(Actions.setPending(options));
 
+		var { limit } = options;
+
 		var done = cb().then(function(result) {
 			Store.dispatch(Actions.saveResult({...options, result}));
+			if (limit)
+				Store.dispatch(Actions.estimateEndOfResults({...options, operation: 'appendResult', length: result.length}));
 			
 			return Parse.Promise.as(result);
 		}).fail(function(err) {
@@ -46,8 +50,11 @@ export default function({Actions, namespace}) {
 	function _operateOnArray(cb, options, operation) {
 		Store.dispatch(Actions.setPending(options));
 
+		var { limit } = options;
+
 		return cb().then(function(result) {
 			Store.dispatch(Actions[operation]({...options, result}));
+			Store.dispatch(Actions.estimateEndOfResults({...options, operation, length: result.length}));
 
 			return Parse.Promise.as(result);
 		}).fail(function(err) {

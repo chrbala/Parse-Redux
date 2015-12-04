@@ -202,6 +202,34 @@ const Cloud = {
 		};
 
 		return setItemState(state, payload, value);
+	},
+	ESTIMATE_END_OF_RESULTS(state, payload) {
+		var value = getItemState(state, payload);
+		var { limit, length, operation } = payload;
+		
+		var opname;
+		switch (operation) {
+			case 'appendResult':
+				opname = 'append';
+				break;
+			case 'prependResult':
+				opname = 'prepend';
+				break;
+		}
+		var endName = opname + 'End';
+		var endOfResults = false;
+
+		if (limit != length)
+			endOfResults = true;
+
+		if (value[endName] !== endOfResults)
+		{
+			value = {...value};
+			value[endName] = endOfResults;
+			state = setItemState(state, payload, value);
+		}
+
+		return state;
 	}
 }
 
