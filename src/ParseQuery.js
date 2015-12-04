@@ -312,7 +312,7 @@ export default class ParseQuery {
 
 	  function setDirection(query, cache, append) {
 	  	var direction = query._where.createdAt;
-	  	var impliedDescending = (!!direction && !!direction.$lt);
+	  	var impliedDescending = (!!direction && !!direction.$gt);
 	  	var start;
 	  	if (direction)
 	  	{
@@ -325,9 +325,8 @@ export default class ParseQuery {
 	  		ascending = cache[0].get('createdAt') < cache[1].get('createdAt');
 	  	else
 	  	{
-	  		var actualDescending = (!!query._order && query._order.length == 1 && query._order[0] == '-createdAt')
-  			var descending = impliedDescending || actualDescending;
-	  		ascending = !descending;
+	  		var actualAscending = (!!query._order && query._order.length == 1 && query._order[0] == 'createdAt')
+  			ascending = impliedDescending || actualAscending;
 	  	}
 
 	  	if (!append)
@@ -371,22 +370,6 @@ export default class ParseQuery {
 	  	var options = {name, data, grouping};
 
 	  	return _manageCache(options, 'prepend');
-	  }).bind(this);
-
-	  var _init = (function _init(grouping, operation) {
-	  	var name = this.className;
-	  	var data = this;
-	  	var options = {name, data, grouping};
-
-	  	return _manageCache(options, operation);
-	  }).bind(this);
-
-	  _find.append.init = (function appendInit(grouping) {
-	  	return _init(grouping, 'append');
-	  }).bind(this);
-
-	  _find.prepend.init = (function prependInit(grouping) {
-	  	return _init(grouping, 'append');
 	  }).bind(this);
 
 	  _find.get = (function findGet(grouping) {
