@@ -249,10 +249,7 @@ export function generateReducers(_reducers, _namespace) {
 		let reducer = _reducers[name];
 
 		reducers[name] = function(state = {}, action) {
-			var path = action.type.split('/');
-			var type = path.pop();
-			var handlerName = path.pop();
-			var namespace = path.pop();
+			var [ namespace, handlerName, type ] = action.type.split('/')
 
 			if (namespace == _namespace && handlerName == name && reducer[type])
 				return reducer[type](state, action.payload);
