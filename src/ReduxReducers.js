@@ -242,13 +242,13 @@ const User = {
 	}
 }
 
-export function generateReducers(_reducers, _namespace) {
+export function generateReducers(_reducers, _namespace, defaultState) {
 	var reducers = {};
 
 	for (let name in _reducers) {
 		let reducer = _reducers[name];
 
-		reducers[name] = function(state = {}, action) {
+		reducers[name] = function(state = defaultState, action) {
 			var [ namespace, handlerName, type ] = action.type.split('/')
 
 			if (namespace == _namespace && handlerName == name && reducer[type])
@@ -261,7 +261,7 @@ export function generateReducers(_reducers, _namespace) {
 }
 
 function generateParseReducers(_reducers) {
-	var reducers = generateReducers(_reducers, 'Parse');
+	var reducers = generateReducers(_reducers, 'Parse', {});
 
 	return function(state = {}, action) {
 		// clear state if user logs out
