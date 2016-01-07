@@ -65,6 +65,15 @@ var objectCount = 0;
 // behavior in a server scenario
 var singleInstance = (!CoreManager.get('IS_NODE'));
 
+function getServerUrlPath() {
+  var serverUrl = CoreManager.get('SERVER_URL');
+  if (serverUrl[serverUrl.length - 1] !== '/') {
+    serverUrl += '/';
+  }
+  var url = serverUrl.replace(/https?:\/\//, '');
+  return url.substr(url.indexOf('/'));
+}
+
 /**
  * Creates a new model with defined attributes.
  *
@@ -99,6 +108,11 @@ export default class ParseObject {
   className: string;
 
   constructor(className: ?string | { className: string, [attr: string]: mixed }, attributes?: { [attr: string]: mixed }, options?: { ignoreValidation: boolean }) {
+    // Enable legacy initializers
+    if (typeof this.initialize === 'function') {
+      this.initialize.apply(this, arguments);
+    }
+
     var toSet = null;
     this._objCount = objectCount++;
     if (typeof className === 'string') {
@@ -120,10 +134,6 @@ export default class ParseObject {
     }
     if (toSet && !this.set(toSet, options)) {
       throw new Error('Can\'t create an invalid Parse Object');
-    }
-    // Enable legacy initializers
-    if (typeof this.initialize === 'function') {
-      this.initialize.apply(this, arguments);
     }
   }
 
@@ -220,9 +230,15 @@ export default class ParseObject {
       ) {
         // Due to the way browsers construct maps, the key order will not change
         // unless the object is changed
-        var json = encode(val, false, true);
-        var stringified = JSON.stringify(json);
-        if (objectCache[attr] !== stringified) {
+        try {
+          var json = encode(val, false, true);
+          var stringified = JSON.stringify(json);
+          if (objectCache[attr] !== stringified) {
+            dirty[attr] = val;
+          }
+        } catch (e) {
+          // Error occurred, possibly by a nested unsaved pointer in a mutable container
+          // No matter how it happened, it indicates a change in the attribute
           dirty[attr] = val;
         }
       }
@@ -326,6 +342,8 @@ export default class ParseObject {
       if ((attr === 'createdAt' || attr === 'updatedAt') &&
           typeof response[attr] === 'string') {
         changes[attr] = parseDate(response[attr]);
+      } else if (attr === 'ACL') {
+        changes[attr] = new ParseACL(response[attr]);
       } else if (attr !== 'objectId') {
         changes[attr] = decode(response[attr]);
       }
@@ -732,11 +750,11 @@ export default class ParseObject {
    */
   clone(): any {
     var clone = new this.constructor();
-    if (clone.set) {
-      clone.set(this.attributes);
-    }
     if (!clone.className) {
       clone.className = this.className;
+    }
+    if (clone.set) {
+      clone.set(this.attributes);
     }
     return clone;
   }
@@ -1355,16 +1373,17 @@ export default class ParseObject {
       parentProto = classMap[adjustedClassName].prototype;
     }
     var ParseObjectSubclass = function(attributes, options) {
+      // Enable legacy initializers
+      if (typeof this.initialize === 'function') {
+        this.initialize.apply(this, arguments);
+      }
+
       this.className = adjustedClassName;
       this._objCount = objectCount++;
       if (attributes && typeof attributes === 'object'){
         if (!this.set(attributes || {}, options)) {
           throw new Error('Can\'t create an invalid Parse Object');
         }
-      }
-      // Enable legacy initializers
-      if (typeof this.initialize === 'function') {
-        this.initialize.apply(this, arguments);
       }
     };
     ParseObjectSubclass.className = adjustedClassName;
@@ -1558,7 +1577,7 @@ var DefaultController = {
             requests: batch.map((obj) => {
               return {
                 method: 'DELETE',
-                path: '/1/classes/' + obj.className + '/' + obj._getId(),
+                path: getServerUrlPath() + 'classes/' + obj.className + '/' + obj._getId(),
                 body: {}
               };
             })
@@ -1682,7 +1701,7 @@ var DefaultController = {
             return RESTController.request('POST', 'batch', {
               requests: batch.map((obj) => {
                 var params = obj._getSaveParams();
-                params.path = '/1/' + params.path;
+                params.path = getServerUrlPath() + params.path;
                 return params;
               })
             }, options);

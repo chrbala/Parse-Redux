@@ -788,7 +788,7 @@ var DefaultController = {
       userData.sessionToken = userData._sessionToken;
       delete userData._sessionToken;
     }
-    var current = ParseUser.fromJSON(userData);
+    var current = ParseObject.fromJSON(userData);
     currentUserCache.set(current);
     current._synchronizeAllAuthData();
     return current;
@@ -825,7 +825,7 @@ var DefaultController = {
         userData.sessionToken = userData._sessionToken;
         delete userData._sessionToken;
       }
-      var current = ParseUser.fromJSON(userData);
+      var current = ParseObject.fromJSON(userData);
       currentUserCache.set(current);
       current._synchronizeAllAuthData();
       return ParsePromise.as(current);

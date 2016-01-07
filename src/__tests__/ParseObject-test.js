@@ -26,6 +26,7 @@ jest.dontMock('../RESTController');
 jest.dontMock('../TaskQueue');
 jest.dontMock('../unique');
 jest.dontMock('../unsavedChildren');
+jest.dontMock('../ParseACL');
 
 jest.dontMock('./test_helpers/asyncHelper');
 jest.dontMock('./test_helpers/mockXHR');
@@ -733,6 +734,18 @@ describe('ParseObject', () => {
     expect(p.op('age')).toBe(undefined);
   });
 
+  it('handles ACL when saved', () => {
+    var p = new ParseObject('Person');
+
+    p._handleSaveResponse({
+      ACL: {}
+    }, 201);
+
+    var acl = p.getACL();
+    expect(acl).not.toEqual(null);
+    expect(acl instanceof ParseACL).toBe(true);
+  });
+
   it('replaces a local id with a real one when saved', () => {
     var p = new ParseObject('Person');
     p.set('age', 34);
@@ -973,6 +986,16 @@ describe('ParseObject', () => {
     expect(parent.save.bind(parent)).toThrow(
       'Cannot create a pointer to an unsaved Object.'
     );
+  });
+
+  it('does not mark shallow objects as dirty', () => {
+    var post = new ParseObject('Post');
+    post.id = '141414';
+    expect(post.dirty()).toBe(false);
+
+    var comment = new ParseObject('Comment');
+    comment.set('parent', post);
+    expect(unsavedChildren(comment)).toEqual([]);
   });
 
   it('can fetch an object given an id', asyncHelper((done) => {
@@ -1558,9 +1581,35 @@ describe('ObjectController', () => {
     xhrs[0].onreadystatechange();
   }));
 
-  it('can save a mixed array of files and objects', asyncHelper((done) => {
-    done();
-  }));
+  it('does not fail when checking if arrays of pointers are dirty', () => {
+    var objectController = CoreManager.getObjectController();
+    var xhrs = [];
+    for (var i = 0; i < 2; i++) {
+      xhrs[i] = {
+        setRequestHeader: jest.genMockFn(),
+        open: jest.genMockFn(),
+        send: jest.genMockFn(),
+        status: 200,
+        readyState: 4
+      };
+    }
+    var current = 0;
+    RESTController._setXHR(function() { return xhrs[current++]; });
+    xhrs[0].responseText = JSON.stringify([{ success: { objectId: 'i333' } }]);
+    xhrs[1].responseText = JSON.stringify({});
+    var brand = ParseObject.fromJSON({
+      className: 'Brand',
+      objectId: 'b123',
+      items: [{ __type: 'Pointer', objectId: 'i222', className: 'Item' }]
+    });
+    expect(brand._getSaveJSON()).toEqual({});
+    var items = brand.get('items');
+    items.push(new ParseObject('Item'));
+    brand.set('items', items);
+    expect(function() { brand.save(); }).not.toThrow();
+
+    xhrs[0].onreadystatechange();
+  });
 });
 
 class MyObject extends ParseObject {
