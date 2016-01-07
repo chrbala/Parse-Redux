@@ -1,5 +1,5 @@
 # Parse-Redux
-This is a drop-in replacement for Parse branched from Parse v1.6.9 that uses a Redux architecture, bringing better application state management to Parse users.
+This is a drop-in replacement for Parse branched from Parse v1.6.14 that uses a Redux architecture, bringing better application state management to Parse users.
 
 ## Objects
 The vanilla Parse library maintains object state in a mutable JS object. Parse-Redux makes that object immutable and exposes it through the Redux state.
